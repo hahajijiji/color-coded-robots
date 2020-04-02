@@ -1,0 +1,108 @@
+//Code to Test Out Wifi-Modules
+//Circuit Connections:
+//TX of ESP8266->Pin5
+//RX of ESP8266->Pin6
+//EN of ESP8266->VCC(3.3 ONLY)
+//VCC (3.3V ONLY)
+//GND of ESP8266 (Ground shared between 3 devices)
+
+//LCD1->GND
+//LCD2->VCC (5V only)
+//LCD3->Wiper of Potentiometer
+//LCD4->Pin12
+//LCD5->GND
+//LCD6->Pin11
+//LCD7->UNUSED
+//LCD8->UNUSED
+//LCD9->UNUSED
+//LCD10->UNUSED
+//LCD11->PIN7
+//LCD12->Pin8
+//LCD13->Pin9
+//LCD14->Pin10
+//LCD15->VCC(5v Only)
+//LCD16->GND
+
+
+#include<LiquidCrystal.h>
+LiquidCrystal lcd(P2_4, P2_3, P1_5, P2_0, P2_1, P2_2);
+
+#include <SoftwareSerial.h>
+SoftwareSerial ESP(P1_3, P1_4); // RX, TX
+
+#define fireSensor P2_5
+
+char str[40];
+int i=0;
+
+void connect_wifi(char *cmd, char *res, int t)
+{
+  while (1)
+  {
+    for (int i = 0; i < 40; i++)
+      str[i] = NULL;
+    i = 0;
+    ESP.println(cmd);
+    Serial.print("-->");
+    Serial.println(cmd);
+    Serial.print("<--");
+    delay(t);
+    serialEvent1();
+    // Serial.println(str);
+    if (strstr(str, res))
+      return;
+    delay(1000);
+  }
+}
+
+void setup()
+{
+  ESP.begin(9600);
+  Serial.begin(9600);
+  pinMode(fireSensor, INPUT);
+  lcd.begin(16,2);
+  lcd.print("Welcome G3");
+  lcd.setCursor(0,1);
+  lcd.print("RoboTechs");
+  delay(2000);
+  lcd.clear();
+  lcd.clear();
+  lcd.print("Finding ESP8266");
+  lcd.setCursor(0,1);
+  lcd.print("Please Wait...");
+    connect_wifi("AT", "OK", 1000);
+  connect_wifi("ATE0", "OK", 1000);
+  connect_wifi("AT+CWMODE=3", "OK", 1000);
+  connect_wifi("AT+CWQAP", "OK", 1000);
+
+  lcd.clear();
+  lcd.print("Connecting WiFi");
+  Serial.println("Connecting Wifi....");
+  connect_wifi("AT+CWJAP=\"SBG6580-2-F0F11\",\"324492faa0\"","CONNECTED", 7000);
+  lcd.clear();
+  lcd.print("WIFI Connected...");
+  Serial.println("Wifi Connected");
+  ESP.println("AT+CIFSR");
+  delay(5000);
+
+}
+
+void loop()
+{
+}
+
+void serialEvent1()
+{
+  int ln=ESP.available();
+  if(ln>0)
+  {
+    for(int i=0;i<ln;i++)
+    {
+      char ch=ESP.read();
+      str[i]=ch;
+      Serial.print(ch);
+      delay(1);
+      
+    }
+  }
+}
