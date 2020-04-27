@@ -163,15 +163,46 @@ void sendMessage(char Data){
 }
 
 void processMessage(char Data){
-  
+  if(Data == 'R' || Data == 'G' || Data == 'B'){
+    getItem(Data);
+    givetoDeliver();
+    goHome();
+  }
+}
+
+void getItem(char color){
+  while(!findColor(color)){
+    moveForward();
+  }
+  brake();
+  openClaw();
+  delay(500);
+  closeClaw();
+  delay(500);
+}
+
+void givetoDeliver(){
+  while(!findColor('Z')){
+    moveForward();
+  }
+  brake();
+  openClaw();
+}
+
+void goHome(){
+  while(!findColor('H')){
+    moveBackward();
+  }
+  brake();
+  closeClaw();
+  sendMessage('H');
 }
 
 void setup() {
   config_ColorSensor(); 
   config_Motors();
   Serial.begin(9600);
-  Serial1.begin(115200);
-  Message = 'R';
+  Serial1.begin(115200); 
 }
 
 void loop() {
