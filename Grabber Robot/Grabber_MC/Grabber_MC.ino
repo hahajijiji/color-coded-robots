@@ -63,19 +63,19 @@ bool findColor(char color){
       digitalWrite(S2, LOW);
       digitalWrite(S3, LOW);
       redFrequency = pulseIn(sensorOut, LOW);
-      redColor = map(redFrequency, 70, 120, 255, 0);
+      redColor = map(redFrequency, 8, 48, 255, 0);      // Replace values after calibration (8, 48)
 
       // Measure BLUE value
       digitalWrite(S2, LOW);
       digitalWrite(S3, HIGH); 
       blueFrequency = pulseIn(sensorOut, LOW);
-      blueColor = map(blueFrequency, 38, 84, 255, 0);
+      blueColor = map(blueFrequency, 11, 44, 255, 0);   // Replace values after calibration (11, 44)
 
       // Measure GREEN value
       digitalWrite(S2, HIGH);
       digitalWrite(S3, HIGH);
       greenFrequency = pulseIn(sensorOut, LOW);
-      greenColor = map(greenFrequency, 100, 199, 255, 0);
+      greenColor = map(greenFrequency, 11, 80, 255, 0); // Replace values after calibration (11, 80)
 
       // Check if color is found (RED, GREEN, BLUE, ...)
       switch (color){
@@ -175,6 +175,9 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:   
+  if(Serial1.available() > 0){
+    Message = Serial1.read();
+    processMessage(Message);   
+  }
   
 }
