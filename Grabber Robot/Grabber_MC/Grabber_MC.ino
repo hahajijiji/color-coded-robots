@@ -17,6 +17,10 @@
 #define S3 14               //P1_7
 #define sensorOut 15        //P1_6
 
+// Extension Pins
+#define extend 17           //P5_7
+#define retract 18          //P3_0
+
 // Variables used to send message
 char input;
 char Message;
@@ -77,7 +81,7 @@ bool findColor(char color){
       greenFrequency = pulseIn(sensorOut, LOW);
       greenColor = map(greenFrequency, 11, 80, 255, 0); // Replace values after calibration (11, 80)
 
-      // Check if color is found (RED, GREEN, BLUE, ...)
+      // Check if color is found (RED, GREEN, BLUE, YELLOW, WHITE)
       switch (color){
         case 'R':
           if(redColor > greenColor && redColor > blueColor){
@@ -146,6 +150,27 @@ void closeClaw(){
   digitalWrite(Claw_Close, HIGH);
 }
 
+void extendClaw(){
+  // Set Extend pin HIGH (P5_7)
+  digitalWrite(extend, HIGH);
+  // Set Retract pin LOW (P3_0)
+  digitalWrite(retract, LOW);
+}
+
+void retractClaw(){
+  // Set Extend pin LOW (P5_7)
+  digitalWrite(extend, LOW);
+  // Set Retract pin HIGH (P3_0)
+  digitalWrite(retract, HIGH);
+}
+
+void stopExtension(){
+  // Set Extend pin LOW (P5_7)
+  digitalWrite(extend, LOW);
+  // Set Retract pin LOW (P3_0)
+  digitalWrite(retract, LOW);
+}
+
 void sendMessage(char Data){
   // Notify WiFi module Data is available to send
   while(Serial1.available() <= 0){
@@ -177,8 +202,15 @@ void getItem(char color){
   brake();
   openClaw();
   delay(500);
+  extendClaw();
+  delay(100);
+  stopExtension();
   closeClaw();
   delay(500);
+  retractClaw();
+  delay(100);
+  stopExtension();
+  sendMessage('G');
 }
 
 void givetoDeliver(){
@@ -186,7 +218,18 @@ void givetoDeliver(){
     moveForward();
   }
   brake();
+  extendClaw();
+  delay(100);
+  stopExtension();
+  delay(500);
   openClaw();
+  delay(100);
+  retractClaw();
+  delay(100);
+  stopExtension();
+  delay(500);
+  closeClaw();
+  sendMessage('D');
 }
 
 void goHome(){
