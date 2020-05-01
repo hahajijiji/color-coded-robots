@@ -1,9 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 
-// MAC Address of UI and Deliver Robot
+// MAC Address of UI and Grabber Robot
 uint8_t UI_MAC[] = {0x2C, 0xF4, 0x32, 0x44, 0xE5, 0xAA};
-uint8_t Deliver_MAC[] = {0xD8, 0xBF, 0xC0, 0xF9, 0x77, 0x95};
+uint8_t Grabber_MAC[] = {0xA4, 0xCF, 0x12, 0xDD, 0x30, 0x87};
 
 // Message Structure
 typedef struct message_info {
@@ -49,7 +49,7 @@ void setup() {
 
   // Register peers (UI and Deliver)
   esp_now_add_peer(UI_MAC, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
-  esp_now_add_peer(Deliver_MAC, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+  esp_now_add_peer(Grabber_MAC, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 }
 
 void loop() {
@@ -61,13 +61,13 @@ void loop() {
   while(Serial.available() <= 0);
   messageInfo.Data = Serial.read();
   
-  // Send message to Deliver Module
-  if(messageInfo.Data == 'M' || messageInfo.Data == '?'){
-    esp_now_send(Deliver_MAC, (uint8_t *) &messageInfo, sizeof(messageInfo));
+  // Send message to Grabber Module
+  if(messageInfo.Data == 'R' || messageInfo.Data == 'B' || messageInfo.Data == 'Y' || messageInfo.Data == 'W' || messageInfo.Data == 'H' || messageInfo.Data == 'N'){
+    esp_now_send(Grabber_MAC, (uint8_t *) &messageInfo, sizeof(messageInfo));
     Serial.write('x');
   }
   // Send message to UI Module
-  else if(messageInfo.Data == 'G' || messageInfo.Data == 'H'){
+  else if(messageInfo.Data == 'D'){
     esp_now_send(UI_MAC, (uint8_t *) &messageInfo, sizeof(messageInfo));
     Serial.write('x');
   }

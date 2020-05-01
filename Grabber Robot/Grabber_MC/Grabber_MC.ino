@@ -199,6 +199,9 @@ void processMessage(char Data){
     givetoDeliver();
     goHome();
   }
+  else if(Data == 'x'){
+    input = Serial1.read();
+  }
 }
 
 void getItem(char color){
