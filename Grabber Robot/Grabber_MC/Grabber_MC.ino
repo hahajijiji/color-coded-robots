@@ -1,6 +1,7 @@
 #include <Servo.h>
 
 Servo Claw;
+Servo Extend;
 
 int pos = 0;
 
@@ -14,6 +15,7 @@ int pos = 0;
 
 // Claw Pins  
 #define Claw_Open 9         //P6_5
+#define Claw_Extend 10      //P6_4
 
 // TCS3200 Pins
 #define S0 11               //P3_6
@@ -22,10 +24,6 @@ int pos = 0;
 #define S3 14               //P1_7
 #define sensorOut 15        //P1_6
 #define OE 39               //P2_6
-
-// Extension Pins
-#define extend 17           //P5_7
-#define retract 18          //P3_0
 
 // Variables used to send message
 char input;
@@ -92,17 +90,23 @@ void findColor(char color){
       switch (color){
         case 'R':
           if(redColor > greenColor && redColor > blueColor){
-              foundColor = true;
+            if(redColor > 0 && greenColor > 0 && blueColor > 0){
+                foundColor = true;
+            }
           }
           break;
         case 'G':
           if(greenColor > redColor && greenColor > blueColor){
-            foundColor = true;
+            if(redColor > 0 && greenColor > 0 && blueColor > 0){
+              foundColor = true;
+            }
           }
           break;
         case 'B':
           if(blueColor > redColor && blueColor > greenColor){
-            foundColor = true;
+            if(redColor > 0 && greenColor > 0 && blueColor > 0){
+                foundColor = true;
+            }
           }
           break;
       }
@@ -157,24 +161,17 @@ void closeClaw(){
 }
 
 void extendClaw(){
-  // Set Extend pin HIGH (P5_7)
-  digitalWrite(extend, HIGH);
-  // Set Retract pin LOW (P3_0)
-  digitalWrite(retract, LOW);
+  for(pos = 0; pos < 360; pos++){
+    Extend.write(pos);
+    delay(15);
+  }
 }
 
 void retractClaw(){
-  // Set Extend pin LOW (P5_7)
-  digitalWrite(extend, LOW);
-  // Set Retract pin HIGH (P3_0)
-  digitalWrite(retract, HIGH);
-}
-
-void stopExtension(){
-  // Set Extend pin LOW (P5_7)
-  digitalWrite(extend, LOW);
-  // Set Retract pin LOW (P3_0)
-  digitalWrite(retract, LOW);
+  for(pos = 360; pos >= 1 ; pos--){
+    Extend.write(pos);
+    delay(15);
+  }
 }
 
 void sendMessage(char Data){
@@ -205,21 +202,9 @@ void processMessage(char Data){
 }
 
 void getItem(char color){
-//  while(!findColor(color)){
-//    moveForward();
-//  }
-//  brake();
-//  openClaw();
-//  delay(500);
-//  extendClaw();
-//  delay(100);
-//  stopExtension();
-//  closeClaw();
-//  delay(500);
-//  retractClaw();
-//  delay(100);
-//  stopExtension();
-//  sendMessage('G');
+  moveForward();
+  findColor(color);
+  brake();
 }
 
 void givetoDeliver(){
@@ -254,6 +239,7 @@ void setup() {
   config_ColorSensor(); 
   config_Motors();
   Claw.attach(Claw_Open);
+  Extend.attach(Claw_Extend);
   Serial.begin(9600);
   Serial1.begin(115200); 
 }
@@ -263,8 +249,19 @@ void loop() {
 //    Message = Serial1.read();
 //    processMessage(Message);   
 //  }
-  moveForward();
-  findColor('R');
-  brake();
-  delay(5000);
+  getItem('R');
+  foundColor = false;
+  openClaw();
+  closeClaw();
+  delay(2000);
+  getItem('B');
+  foundColor = false;
+  openClaw();
+  closeClaw();
+  delay(2000);
+  getItem('G');
+  foundColor = false;
+  openClaw();
+  closeClaw();
+  delay(2000);
 }

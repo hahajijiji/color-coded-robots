@@ -9,6 +9,7 @@
 #define S2 13
 #define S3 14
 #define sensorOut 15
+#define OE 39               //P2_6
 
 // Stores frequency read by the photodiodes
 int redFrequency = 0;
@@ -26,13 +27,16 @@ void setup() {
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
-  
+  pinMode(OE, OUTPUT);
+    
   // Setting the sensorOut as an input
   pinMode(sensorOut, INPUT);
   
   // Setting frequency scaling to 20%
   digitalWrite(S0,HIGH);
   digitalWrite(S1,LOW);
+
+  digitalWrite(OE,LOW);
   
   // Begins serial communication
   Serial.begin(9600);
