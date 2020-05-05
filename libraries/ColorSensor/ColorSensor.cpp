@@ -13,23 +13,18 @@ int blueColor = 0;
 
 bool foundColor = false;
 
-int S0, S1, S2, S3, sensorOut, OE;
-
-ColorSensor::ColorSensor()
+ColorSensor::ColorSensor(int _S0, int _S1, int _S2, int _S3, int _sensorOut, int _OE)
 {
-
+  S0 = _S0;
+  S1 = _S1;
+  S2 = _S2;
+  S3 = _S3;
+  sensorOut = _sensorOut;
+  OE = _OE;
 }
 
-void ColorSensor::SETUP(int S0_1, int S1_1, int S2_1, int S3_1, int sensorOut_1, int OE_1)
+void ColorSensor::SETUP()
 {
-  
-  S0 = S0_1;  
-  S1 = S1_1;
-  S2 = S2_1;
-  S3 = S3_1;
-  sensorOut = sensorOut_1;
-  OE = OE_1;
-
   // Setting the outputs
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);

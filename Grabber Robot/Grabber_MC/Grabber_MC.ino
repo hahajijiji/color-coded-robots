@@ -1,27 +1,21 @@
 #include <Motor.h>
 #include <ColorSensor.h>
 #include <Servo.h>
-
-// Claw Pins  
-#define Claw_Open 40         //P6_5, P2_7
-#define Claw_Extend 37      //P6_4, P5_6
-
-// TCS3200 Pins
-#define S0 11               //P3_6
-#define S1 12               //P5_2
-#define S2 13               //P5_0
-#define S3 14               //P1_7
-#define sensorOut 15        //P1_6
-#define OE 39               //P2_6
+  
+#define clawPin 40         //P2_7
 
 /* 
- *  Create Motor Object
- *  Motor 1 Forward   Pin 34 (P2_3)
- *  Motor 1 Backward  Pin 35 (P6_7)
- *  Motor 2 Forward   Pin 31 (P3_7)
- *  Motor 2 Backward  Pin 32 (P3_5)
+ *  Create Motor Objects
+ *  Motor 1 Forward       Pin 34 (P2_3)
+ *  Motor 1 Backward      Pin 35 (P6_7)
+ *  Motor 2 Forward       Pin 31 (P3_7)
+ *  Motor 2 Backward      Pin 32 (P3_5)
+ *  Extend Motor Forward  Pin 37 (P5_6)
+ *  Extend Motor Backward Pin 36 (P6_6)
  */
-Motor motor;
+Motor motor1(34, 35);
+Motor motor2(31, 32);
+Motor extend(37, 36);
 
 /*
  * Create Color Sensor Object
@@ -32,10 +26,9 @@ Motor motor;
  * sensorOut  Pin 15 (P1_6)
  * OE         Pin 39 (P2_6)
  */
- ColorSensor colorSensor;
+ColorSensor colorSensor(11, 12, 13, 14, 15, 39);
 
 Servo Claw;
-Servo Extend;
 
 int pos = 0;
 
@@ -44,29 +37,36 @@ char input;
 char Message;
 char Color;
 
+void setup() {
+  colorSensor.SETUP(); 
+  motor1.SETUP();
+  motor2.SETUP();
+  extend.SETUP();
+  Claw.attach(clawPin);
+  closeClaw();
+  Serial.begin(9600);
+  Serial1.begin(115200); 
+}
+
+void loop() {
+//  if(Serial1.available() > 0){
+//    Message = Serial1.read();
+//    processMessage(Message);   
+//  }
+  openClaw();
+  closeClaw();
+}
+
 void openClaw(){
-  analogWrite(Claw_Open, 0);
-  delay(15);
-  analogWrite(Claw_Open, 255);
-  delay(15);
-}
-
-void closeClaw(){
-  analogWrite(Claw_Open, 0);
-  delay(1000);
-  analogWrite(Claw_Open, 255);
-}
-
-void extendClaw(){
-  for(pos = 180; pos >= 0; pos--){
-    //Extend.write(pos);
+  for(pos = 0; pos <= 180; pos++){
+    Claw.write(pos);
     delay(5);
   }
 }
 
-void retractClaw(){
-  for(pos = 0; pos < 180 ; pos++){
-    //Extend.write(pos);
+void closeClaw(){
+  for(pos = 180; pos >= 0; pos--){
+    Claw.write(pos);
     delay(5);
   }
 }
@@ -108,65 +108,43 @@ void processMessage(char Data){
 }
 
 void getItem(char color){
-  motor.FORWARD(32);
+  motor1.FORWARD(32);
+  motor2.FORWARD(32);
   colorSensor.findColor(color);
-  motor.BRAKE();
-  for(pos = 255; pos >= 0; pos--){
-    analogWrite(Claw_Extend, pos);
-    delay(5);
-  }
-    delay(5000);
-  for(pos = 0; pos < 255; pos++){
-    analogWrite(Claw_Extend, pos);
-    delay(5);
-  }
-
-  //openClaw();
-  //extendClaw();
-  //closeClaw();
-  //retractClaw();
-  //sendMessage('G');
+  motor1.BRAKE();
+  motor2.BRAKE();
+  openClaw();
+  extend.FORWARD(32);
+  delay(500);
+  extend.BRAKE();
+  closeClaw();
+  extend.BACKWARD(32);
+  delay(500);
+  extend.BRAKE();
+  sendMessage('G');
 }
 
 void givetoDeliver(){
-  motor.FORWARD(32);
+  motor1.FORWARD(32);
+  motor2.FORWARD(32);
   colorSensor.findColor('G');   // Change Color 
-  motor.BRAKE();
-  extendClaw();
+  motor1.BRAKE();
+  motor2.BRAKE();
+  extend.FORWARD(32);
+  delay(500);
+  extend.BRAKE();
   openClaw();
-  retractClaw();
+  extend.BACKWARD(32);
+  delay(500);
+  extend.BRAKE();
   closeClaw();
 }
 
 void goHome(){
-  motor.BACKWARD(32);
+  motor1.BACKWARD(32);
+  motor2.BACKWARD(32);
   colorSensor.findColor('H');   // Change Color 
-  motor.BRAKE();
+  motor1.BRAKE();
+  motor2.BRAKE();  
   sendMessage('H');
-}
-
-void setup() {
-  colorSensor.SETUP(S0, S1, S2, S3, sensorOut, OE); 
-  motor.SETUP();
-  //Claw.attach(Claw_Open);
-  Extend.attach(Claw_Extend);
-  //pinMode(Claw_Extend, OUTPUT);
-  pinMode(Claw_Open,OUTPUT);
-  Serial.begin(9600);
-  Serial1.begin(115200); 
-}
-
-void loop() {
-//  if(Serial1.available() > 0){
-//    Message = Serial1.read();
-//    processMessage(Message);   
-//  }
-//  getItem('R');
-//  delay(2000);
-//  getItem('B');
-//  motor.BACKWARD(32);
-//  delay(5000);  
-//  getItem('G');
-//  delay(2000);
-  closeClaw();
 }

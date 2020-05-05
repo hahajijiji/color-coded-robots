@@ -6,12 +6,14 @@
 class Motor
 {
    public:
-     Motor();
+     Motor(int fPin, int bPin);
      void SETUP();
      void FORWARD(int speed);
      void BACKWARD(int speed);
      void BRAKE();
    private:
+     int forwardPin;
+     int backwardPin;
 };
 
 #endif
