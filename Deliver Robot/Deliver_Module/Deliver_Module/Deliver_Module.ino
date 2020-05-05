@@ -62,7 +62,7 @@ void loop() {
   messageInfo.Data = Serial.read();
   
   // Send message to Grabber Module
-  if(messageInfo.Data == 'R' || messageInfo.Data == 'B' || messageInfo.Data == 'Y' || messageInfo.Data == 'W' || messageInfo.Data == 'H' || messageInfo.Data == 'N'){
+  if(messageInfo.Data == 'r' || messageInfo.Data == 'b' || messageInfo.Data == 'y' || messageInfo.Data == 'w' || messageInfo.Data == 'H' || messageInfo.Data == 'N'){
     esp_now_send(Grabber_MAC, (uint8_t *) &messageInfo, sizeof(messageInfo));
     Serial.write('x');
   }

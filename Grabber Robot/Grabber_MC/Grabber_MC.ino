@@ -1,6 +1,6 @@
 #include <Servo.h>
 
-Servo Claw;
+//Servo Claw;
 Servo Extend;
 
 int pos = 0;
@@ -14,8 +14,8 @@ int pos = 0;
 #define Motor2_Backward 32   //P3_5
 
 // Claw Pins  
-#define Claw_Open 9         //P6_5
-#define Claw_Extend 10      //P6_4
+#define Claw_Open 40         //P6_5, P2_7
+#define Claw_Extend 37      //P6_4, P5_6
 
 // TCS3200 Pins
 #define S0 11               //P3_6
@@ -28,6 +28,7 @@ int pos = 0;
 // Variables used to send message
 char input;
 char Message;
+char Color;
 
 // Store frequency read by the photodiodes
 int redFrequency = 0;
@@ -148,29 +149,29 @@ void brake(){
 
 void openClaw(){
   for(pos = 0; pos < 180; pos++){
-    Claw.write(pos);
-    delay(15);
+    //Claw.write(pos);
+    delay(5);
   }
 }
 
 void closeClaw(){
   for(pos = 180; pos >= 1 ; pos--){
-    Claw.write(pos);
-    delay(15);
+    //Claw.write(pos);
+    delay(5);
   }
 }
 
 void extendClaw(){
-  for(pos = 0; pos < 360; pos++){
-    Extend.write(pos);
-    delay(15);
+  for(pos = 180; pos >= 0; pos--){
+    //Extend.write(pos);
+    delay(5);
   }
 }
 
 void retractClaw(){
-  for(pos = 360; pos >= 1 ; pos--){
-    Extend.write(pos);
-    delay(15);
+  for(pos = 0; pos < 180 ; pos++){
+    //Extend.write(pos);
+    delay(5);
   }
 }
 
@@ -192,9 +193,18 @@ void sendMessage(char Data){
 
 void processMessage(char Data){
   if(Data == 'R' || Data == 'G' || Data == 'B'){
-    getItem(Data);
-    givetoDeliver();
-    goHome();
+    Data = Color;
+    getItem(Color);
+  }
+  else if(Data == 'r' || Data == 'g' || Data == 'b'){
+    Data = Data - 0x20;
+    if(Data == Color){
+      sendMessage('M');
+      goHome();
+    }
+    else{
+      goHome();
+    }
   }
   else if(Data == 'x'){
     input = Serial1.read();
@@ -204,42 +214,51 @@ void processMessage(char Data){
 void getItem(char color){
   moveForward();
   findColor(color);
+  foundColor = false;
   brake();
+  for(pos = 255; pos >= 0; pos--){
+    analogWrite(Claw_Extend, pos);
+    delay(5);
+  }
+    delay(5000);
+  for(pos = 0; pos < 255; pos++){
+    analogWrite(Claw_Extend, pos);
+    delay(5);
+  }
+
+  //openClaw();
+  //extendClaw();
+  //closeClaw();
+  //retractClaw();
+  //sendMessage('G');
 }
 
 void givetoDeliver(){
-//  while(!findColor('Z')){
-//    moveForward();
-//  }
-//  brake();
-//  extendClaw();
-//  delay(100);
-//  stopExtension();
-//  delay(500);
-//  openClaw();
-//  delay(100);
-//  retractClaw();
-//  delay(100);
-//  stopExtension();
-//  delay(500);
-//  closeClaw();
-//  sendMessage('D');
+  moveForward();
+  findColor('G');   // Change Color 
+  foundColor = false;
+  brake();
+  extendClaw();
+  openClaw();
+  retractClaw();
+  closeClaw();
 }
 
 void goHome(){
-//  while(!findColor('H')){
-//    moveBackward();
-//  }
-//  brake();
-//  closeClaw();
-//  sendMessage('H');
+  moveBackward();
+  findColor('H');   // Change Color 
+  foundColor = false;
+  brake();
+  sendMessage('H');
 }
 
 void setup() {
   config_ColorSensor(); 
   config_Motors();
-  Claw.attach(Claw_Open);
+//  Claw.attach(Claw_Open);
   Extend.attach(Claw_Extend);
+  //pinMode(Claw_Extend, OUTPUT);
+  pinMode(Claw_Open,OUTPUT);
   Serial.begin(9600);
   Serial1.begin(115200); 
 }
@@ -249,19 +268,13 @@ void loop() {
 //    Message = Serial1.read();
 //    processMessage(Message);   
 //  }
-  getItem('R');
-  foundColor = false;
-  openClaw();
-  closeClaw();
-  delay(2000);
-  getItem('B');
-  foundColor = false;
-  openClaw();
-  closeClaw();
-  delay(2000);
-  getItem('G');
-  foundColor = false;
-  openClaw();
-  closeClaw();
-  delay(2000);
+//  getItem('R');
+//  delay(2000);
+//  getItem('B');
+//  moveBackward();
+//  delay(5000);  
+//  getItem('G');
+//  delay(2000);
+
+
 }
