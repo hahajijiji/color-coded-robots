@@ -1,0 +1,3 @@
+ColorSensor	KEYWORD1
+SETUP	KEYWORD2
+findColor	KEYWORD3

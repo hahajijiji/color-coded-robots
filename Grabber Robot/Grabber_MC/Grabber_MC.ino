@@ -1,17 +1,6 @@
+#include <Motor.h>
+#include <ColorSensor.h>
 #include <Servo.h>
-
-//Servo Claw;
-Servo Extend;
-
-int pos = 0;
-
-// Motor 1 Pins  
-#define Motor1_Forward 34    //P2_3
-#define Motor1_Backward 35   //P6_7
-
-// Motor 2 Pins
-#define Motor2_Forward 31    //P3_7
-#define Motor2_Backward 32   //P3_5
 
 // Claw Pins  
 #define Claw_Open 40         //P6_5, P2_7
@@ -25,140 +14,47 @@ int pos = 0;
 #define sensorOut 15        //P1_6
 #define OE 39               //P2_6
 
+/* 
+ *  Create Motor Object
+ *  Motor 1 Forward   Pin 34 (P2_3)
+ *  Motor 1 Backward  Pin 35 (P6_7)
+ *  Motor 2 Forward   Pin 31 (P3_7)
+ *  Motor 2 Backward  Pin 32 (P3_5)
+ */
+Motor motor;
+
+/*
+ * Create Color Sensor Object
+ * S0         Pin 11 (P3_6)
+ * S1         Pin 12 (P5_2)
+ * S2         Pin 13 (P5_0)
+ * S3         Pin 14 (P1_7)
+ * sensorOut  Pin 15 (P1_6)
+ * OE         Pin 39 (P2_6)
+ */
+ ColorSensor colorSensor;
+
+Servo Claw;
+Servo Extend;
+
+int pos = 0;
+
 // Variables used to send message
 char input;
 char Message;
 char Color;
 
-// Store frequency read by the photodiodes
-int redFrequency = 0;
-int greenFrequency = 0;
-int blueFrequency = 0;
-
-// Store RGB color values
-int redColor = 0;
-int greenColor = 0;
-int blueColor = 0;
-
-bool foundColor = false;
-
-void config_ColorSensor(){
-  // Setting the outputs
-  pinMode(S0, OUTPUT);
-  pinMode(S1, OUTPUT);
-  pinMode(S2, OUTPUT);
-  pinMode(S3, OUTPUT);
-  pinMode(OE, OUTPUT);
-  
-  // Setting the sensorOut as an input
-  pinMode(sensorOut, INPUT);
-  
-  // Setting frequency scaling to 20%
-  digitalWrite(S0,HIGH);
-  digitalWrite(S1,LOW);
-  digitalWrite(OE,LOW);
-}
-
-void config_Motors(){
-  // Setting the outputs
-  pinMode(Motor1_Forward, OUTPUT);
-  pinMode(Motor1_Backward, OUTPUT);
-  pinMode(Motor2_Forward, OUTPUT);
-  pinMode(Motor2_Backward, OUTPUT);
-}
-
-void findColor(char color){
-  while(!foundColor){
-      // Measure RED value
-      digitalWrite(S2, LOW);
-      digitalWrite(S3, LOW);
-      redFrequency = pulseIn(sensorOut, LOW);
-      redColor = map(redFrequency, 8, 48, 255, 0);      // Replace values after calibration (8, 48)
-
-      // Measure BLUE value
-      digitalWrite(S2, LOW);
-      digitalWrite(S3, HIGH); 
-      blueFrequency = pulseIn(sensorOut, LOW);
-      blueColor = map(blueFrequency, 11, 44, 255, 0);   // Replace values after calibration (11, 44)
-
-      // Measure GREEN value
-      digitalWrite(S2, HIGH);
-      digitalWrite(S3, HIGH);
-      greenFrequency = pulseIn(sensorOut, LOW);
-      greenColor = map(greenFrequency, 11, 80, 255, 0); // Replace values after calibration (11, 80)
-
-      // Check if color is found (RED, GREEN, BLUE, YELLOW, WHITE)
-      switch (color){
-        case 'R':
-          if(redColor > greenColor && redColor > blueColor){
-            if(redColor > 0 && greenColor > 0 && blueColor > 0){
-                foundColor = true;
-            }
-          }
-          break;
-        case 'G':
-          if(greenColor > redColor && greenColor > blueColor){
-            if(redColor > 0 && greenColor > 0 && blueColor > 0){
-              foundColor = true;
-            }
-          }
-          break;
-        case 'B':
-          if(blueColor > redColor && blueColor > greenColor){
-            if(redColor > 0 && greenColor > 0 && blueColor > 0){
-                foundColor = true;
-            }
-          }
-          break;
-      }
-  }
-}
-
-void moveForward(){
-  // Send PWM signal to Motor1_Forward pin (P2_3)
-  analogWrite(Motor1_Forward, 32); //0-255
-  // Set Motor1_Backward pin LOW (P6_7)
-  analogWrite(Motor1_Backward, 0);
-  
-  // Send PWM signal to Motor2_Forward pin (P3_7)
-  analogWrite(Motor2_Forward, 32); //0-255
-  // Set Motor2_Backward pin LOW (P3_5)
-  analogWrite(Motor2_Backward, 0);
-}
-
-void moveBackward(){
-  // Send PWM signal to Motor1_Backward pin (P4_3)
-  analogWrite(Motor1_Backward, 32); //0-255
-  // Set Motor1_Forward pin LOW (P4_1)
-  analogWrite(Motor1_Forward, 0);
-  
-  // Send PWM signal to Motor2_Backward pin (P4_6)
-  analogWrite(Motor2_Backward, 32); //0-255
-  // Set Motor2_Forward pin LOW (P1_5)
-  analogWrite(Motor2_Forward, 0);
-}
-
-void brake(){
-  // Set Motor1_Forward and Motor1_Backward HIGH
-  digitalWrite(Motor1_Forward, HIGH);
-  digitalWrite(Motor1_Backward, HIGH);
-  // Set Motor2_Forward and Motor2_Backward HIGH
-  digitalWrite(Motor2_Forward, HIGH);
-  digitalWrite(Motor2_Backward, HIGH);
-}
-
 void openClaw(){
-  for(pos = 0; pos < 180; pos++){
-    //Claw.write(pos);
-    delay(5);
-  }
+  analogWrite(Claw_Open, 0);
+  delay(15);
+  analogWrite(Claw_Open, 255);
+  delay(15);
 }
 
 void closeClaw(){
-  for(pos = 180; pos >= 1 ; pos--){
-    //Claw.write(pos);
-    delay(5);
-  }
+  analogWrite(Claw_Open, 0);
+  delay(1000);
+  analogWrite(Claw_Open, 255);
 }
 
 void extendClaw(){
@@ -212,10 +108,9 @@ void processMessage(char Data){
 }
 
 void getItem(char color){
-  moveForward();
-  findColor(color);
-  foundColor = false;
-  brake();
+  motor.FORWARD(32);
+  colorSensor.findColor(color);
+  motor.BRAKE();
   for(pos = 255; pos >= 0; pos--){
     analogWrite(Claw_Extend, pos);
     delay(5);
@@ -234,10 +129,9 @@ void getItem(char color){
 }
 
 void givetoDeliver(){
-  moveForward();
-  findColor('G');   // Change Color 
-  foundColor = false;
-  brake();
+  motor.FORWARD(32);
+  colorSensor.findColor('G');   // Change Color 
+  motor.BRAKE();
   extendClaw();
   openClaw();
   retractClaw();
@@ -245,17 +139,16 @@ void givetoDeliver(){
 }
 
 void goHome(){
-  moveBackward();
-  findColor('H');   // Change Color 
-  foundColor = false;
-  brake();
+  motor.BACKWARD(32);
+  colorSensor.findColor('H');   // Change Color 
+  motor.BRAKE();
   sendMessage('H');
 }
 
 void setup() {
-  config_ColorSensor(); 
-  config_Motors();
-//  Claw.attach(Claw_Open);
+  colorSensor.SETUP(S0, S1, S2, S3, sensorOut, OE); 
+  motor.SETUP();
+  //Claw.attach(Claw_Open);
   Extend.attach(Claw_Extend);
   //pinMode(Claw_Extend, OUTPUT);
   pinMode(Claw_Open,OUTPUT);
@@ -271,10 +164,9 @@ void loop() {
 //  getItem('R');
 //  delay(2000);
 //  getItem('B');
-//  moveBackward();
+//  motor.BACKWARD(32);
 //  delay(5000);  
 //  getItem('G');
 //  delay(2000);
-
-
+  closeClaw();
 }
